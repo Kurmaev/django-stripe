@@ -36,5 +36,7 @@ subscription_final_payment_attempt_failed = Signal(providing_args=[
 
 ping = Signal()
 
+stripe_broadcast_signal = Signal(providing_args=['message'])
+
 class StripeWebhook(object):
     pass

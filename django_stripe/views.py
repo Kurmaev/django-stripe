@@ -9,7 +9,8 @@ from .settings import STRIPE_SECRET_KEY
 from .forms import CardTokenForm
 from .signals import (recurring_payment_failed, invoice_ready, \
     recurring_payment_succeeded, subscription_trial_ending, \
-    subscription_final_payment_attempt_failed, ping, StripeWebhook)
+    subscription_final_payment_attempt_failed, ping, StripeWebhook, \
+    stripe_broadcast_signal)
 
 class BaseCardTokenFormView(FormView):
     template_name = 'django_stripe/card_form.html'
@@ -31,21 +32,21 @@ class BaseCardTokenFormView(FormView):
 class WebhookSignalView(View):
     http_method_names = ['post']
     event_signals = {
-        'recurring_payment_failed': recurring_payment_failed,
-        'invoice_ready': invoice_ready,
-        'recurring_payment_succeeded': recurring_payment_succeeded,
-        'subscription_trial_ending': subscription_trial_ending,
-        'subscription_final_payment_attempt_failed': subscription_final_payment_attempt_failed,
+        'invoice.payment_failed': recurring_payment_failed,
+        'invoice.payment_succeeded': recurring_payment_succeeded,
+        'invoice.created': invoice_ready,
+        'customer.subscription.trial_will_end': subscription_trial_ending,
+        'charge.failed': subscription_final_payment_attempt_failed,
         'ping': ping,
     }
 
     def post(self, request, *args, **kwargs):
-        if 'json' not in request.POST:
-            raise Http404
 
-        message = json.loads(request.POST.get('json'))
-        event = message.get('event')
-        del message['event']
+        post = request.POST.keys()[0]
+        message = json.loads(post)
+        event = message.get('type')
+        del message['type']
+
 
         if event not in self.event_signals:
             raise Http404
@@ -56,6 +57,7 @@ class WebhookSignalView(View):
 
         signal = self.event_signals.get(event)
         signal.send_robust(sender=StripeWebhook, **message)
+        signal.send_robust(sender=StripeWebhook, **{'message':message})
 
         return HttpResponse()
 
