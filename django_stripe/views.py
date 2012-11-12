@@ -49,7 +49,7 @@ class WebhookSignalView(View):
         
         if event not in self.event_signals:
             raise Http404
-        msg = {}
+        msg = {'type':event}
         for key, value in message.iteritems():
             if isinstance(value, dict) and 'object' in value:
                 msg[key] = convert_to_stripe_object(value, STRIPE_SECRET_KEY)
