@@ -57,7 +57,8 @@ class WebhookSignalView(View):
 
         signal = self.event_signals.get(event)
         signal.send_robust(sender=StripeWebhook, **message)
-        signal.send_robust(sender=StripeWebhook, **{'message':message})
+        stripe_broadcast_signal.send_robust(sender=StripeWebhook, 
+            **{'message':message})
 
         return HttpResponse()
 
