@@ -1,42 +1,26 @@
 from django.dispatch import Signal
 
-upcoming_invoice_updated = Signal(providing_args=['customer'])
-invoice_updated = Signal(providing_args=['invoice'])
+sSignal = Signal(providing_args=['message'])
+
+upcoming_invoice_updated = sSignal
+invoice_updated = sSignal
 
 # Webhooks
-recurring_payment_failed = Signal(providing_args=[
-    'customer',
-    'attempt',
-    'invoice',
-    'payment',
-    'livemode',
-])
+sSignal = sSignal
 
-invoice_ready = Signal(providing_args=[
-    'customer',
-    'invoice'
-])
+recurring_payment_failed = sSignal
 
-recurring_payment_succeeded = Signal(providing_args=[
-    'customer',
-    'invoice',
-    'payment',
-    'livemode',
-])
+invoice_ready = sSignal
 
-subscription_trial_ending = Signal(providing_args=[
-    'customer',
-    'subscription',
-])
+recurring_payment_succeeded = sSignal
 
-subscription_final_payment_attempt_failed = Signal(providing_args=[
-    'customer',
-    'subscription',
-])
+subscription_trial_ending = sSignal
+
+subscription_final_payment_attempt_failed = sSignal
 
 ping = Signal()
 
-stripe_broadcast_signal = Signal(providing_args=['message'])
+stripe_broadcast_signal = sSignal
 
 class StripeWebhook(object):
     pass

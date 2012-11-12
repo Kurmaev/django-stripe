@@ -46,19 +46,17 @@ class WebhookSignalView(View):
         message = json.loads(post)
         event = message.get('type')
         del message['type']
-
-
+        
         if event not in self.event_signals:
             raise Http404
-
+        msg = {}
         for key, value in message.iteritems():
             if isinstance(value, dict) and 'object' in value:
-                message[key] = convert_to_stripe_object(value, STRIPE_SECRET_KEY)
-
+                msg[key] = convert_to_stripe_object(value, STRIPE_SECRET_KEY)
+        msg = {'message':msg}
         signal = self.event_signals.get(event)
-        signal.send_robust(sender=StripeWebhook, **message)
-        stripe_broadcast_signal.send_robust(sender=StripeWebhook, 
-            **{'message':message})
+        signal.send_robust(sender=StripeWebhook, **msg)
+        stripe_broadcast_signal.send_robust(sender=StripeWebhook, **msg)
 
         return HttpResponse()
 
