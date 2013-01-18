@@ -41,16 +41,24 @@ class WebhookSignalView(View):
     }
 
     def post(self, request, *args, **kwargs):
-        
-        post = request.POST.keys()[0]
+
+        #View accepts only POST, so:        
+        post = request.raw_post_data
+
         try:
             message = json.loads(post)
-        except json.JSONDecodeError, e:
-            # logging to logs wrong json
-            print request.POST
-            print "-------"
-            print post
-            raise e
+        except Exception:
+            # writting to logs wrong json
+            f = open('/tmp/err_log', 'w+')
+            f.write(request.body)
+            f.write('\n')
+            f.write(str(request.POST))
+            f.write('\n')
+            f.write(str(post))
+            f.write('\nend\n')
+            f.close()
+            #Make that admins know about err
+            raise
 
         event = message.get('type')
         del message['type']
