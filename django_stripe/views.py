@@ -10,7 +10,7 @@ from .forms import CardTokenForm
 from .signals import (recurring_payment_failed, invoice_ready, \
     recurring_payment_succeeded, subscription_trial_ending, \
     subscription_final_payment_attempt_failed, ping, StripeWebhook, \
-    stripe_broadcast_signal)
+    stripe_broadcast_signal, sSignal)
 
 class BaseCardTokenFormView(FormView):
     template_name = 'django_stripe/card_form.html'
@@ -42,7 +42,7 @@ class WebhookSignalView(View):
 
     def post(self, request, *args, **kwargs):
 
-        #View accepts only POST, so:        
+        #View accepts only POST, so:
         post = request.raw_post_data
 
         try:
@@ -62,15 +62,16 @@ class WebhookSignalView(View):
 
         event = message.get('type')
         del message['type']
-        
+
         if event not in self.event_signals:
-            raise Http404
+            return HttpResponse()
+
         msg = {'type':event}
         for key, value in message.iteritems():
             if isinstance(value, dict) and 'object' in value:
                 msg[key] = convert_to_stripe_object(value, STRIPE_SECRET_KEY)
         msg = {'message':msg}
-        signal = self.event_signals.get(event)
+        signal = self.event_signals.get(event, sSignal)
         signal.send_robust(sender=StripeWebhook, **msg)
         stripe_broadcast_signal.send_robust(sender=StripeWebhook, **msg)
 
